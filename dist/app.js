@@ -110,4 +110,28 @@ class ProjectInput {
 __decorate([
     Autobind
 ], ProjectInput.prototype, "submitHandler", null);
+// ProjectList Class
+class ProjectList {
+    constructor(type) {
+        this.type = type;
+        this.templateList = document.getElementById("project-list");
+        this.hostElement = document.getElementById("app");
+        const importedHTMLContent = document.importNode(this.templateList.content, true);
+        this.element = importedHTMLContent.firstElementChild;
+        this.element.id = `${this.type}-projects`;
+        this.attach();
+        this.renderContent();
+    }
+    renderContent() {
+        const listId = `${this.type}-projects-list`;
+        this.element.querySelector("ul").id = listId;
+        this.element.querySelector("h2").textContent =
+            this.type.toUpperCase() + " PROJECTS";
+    }
+    attach() {
+        this.hostElement.insertAdjacentElement("afterbegin", this.element);
+    }
+}
 const projectInput = new ProjectInput();
+const projectListActive = new ProjectList("active");
+const projectListFinished = new ProjectList("finished");

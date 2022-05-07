@@ -158,4 +158,40 @@ class ProjectInput {
   }
 }
 
+// ProjectList Class
+
+class ProjectList {
+  templateList: HTMLTemplateElement;
+  hostElement: HTMLDivElement;
+  element: HTMLSelectElement;
+
+  constructor(private type: "active" | "finished") {
+    this.templateList = document.getElementById(
+      "project-list"
+    )! as HTMLTemplateElement;
+    this.hostElement = document.getElementById("app")! as HTMLDivElement;
+    const importedHTMLContent = document.importNode(
+      this.templateList.content,
+      true
+    );
+    this.element = importedHTMLContent.firstElementChild as HTMLSelectElement;
+    this.element.id = `${this.type}-projects`;
+    this.attach();
+    this.renderContent();
+  }
+
+  private renderContent() {
+    const listId = `${this.type}-projects-list`;
+    this.element.querySelector("ul")!.id = listId;
+    this.element.querySelector("h2")!.textContent =
+      this.type.toUpperCase() + " PROJECTS";
+  }
+
+  private attach() {
+    this.hostElement.insertAdjacentElement("afterbegin", this.element);
+  }
+}
+
 const projectInput = new ProjectInput();
+const projectListActive = new ProjectList("active");
+const projectListFinished = new ProjectList("finished");
