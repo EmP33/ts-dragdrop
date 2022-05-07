@@ -5,6 +5,45 @@ var __decorate = (this && this.__decorate) || function (decorators, target, key,
     else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
     return c > 3 && r && Object.defineProperty(target, key, r), r;
 };
+// Project Type
+var ProjectStatus;
+(function (ProjectStatus) {
+    ProjectStatus[ProjectStatus["Active"] = 0] = "Active";
+    ProjectStatus[ProjectStatus["Finished"] = 1] = "Finished";
+})(ProjectStatus || (ProjectStatus = {}));
+class Project {
+    constructor(id, title, description, people, status) {
+        this.id = id;
+        this.title = title;
+        this.description = description;
+        this.people = people;
+        this.status = status;
+    }
+}
+class ProjectState {
+    constructor() {
+        this.listeners = [];
+        this.projects = [];
+    }
+    static getInstance() {
+        if (this.instance) {
+            return this.instance;
+        }
+        this.instance = new ProjectState();
+        return this.instance;
+    }
+    addListener(listenerFn) {
+        this.listeners.push(listenerFn);
+    }
+    addProject(title, description, numOfPeople) {
+        const newProject = new Project(Math.random().toString(), title, description, numOfPeople, ProjectStatus.Active);
+        this.projects.push(newProject);
+        for (const listenerFn of this.listeners) {
+            listenerFn(this.projects.slice());
+        }
+    }
+}
+const projectState = ProjectState.getInstance();
 function validate(validatebleInput) {
     let isValid = true;
     if (validatebleInput.required) {
@@ -96,8 +135,8 @@ class ProjectInput {
         const userInput = this.gatherUserInput();
         if (Array.isArray(userInput)) {
             const [title, description, people] = userInput;
+            projectState.addProject(title, description, people);
             this.clearInputs();
-            console.log(title, description, people);
         }
     }
     configure() {
@@ -116,11 +155,31 @@ class ProjectList {
         this.type = type;
         this.templateList = document.getElementById("project-list");
         this.hostElement = document.getElementById("app");
+        this.assignedProjects = [];
         const importedHTMLContent = document.importNode(this.templateList.content, true);
         this.element = importedHTMLContent.firstElementChild;
         this.element.id = `${this.type}-projects`;
+        projectState.addListener((projects) => {
+            const relevantProjects = projects.filter((prj) => {
+                if (this.type === "active") {
+                    return prj.status === ProjectStatus.Active;
+                }
+                return prj.status === ProjectStatus.Finished;
+            });
+            this.assignedProjects = relevantProjects;
+            this.renderProjects();
+        });
         this.attach();
         this.renderContent();
+    }
+    renderProjects() {
+        const listEl = document.getElementById(`${this.type}-projects-list`);
+        listEl.innerHTML = "";
+        for (const prjItem of this.assignedProjects) {
+            const listItem = document.createElement("li");
+            listItem.textContent = prjItem.title;
+            listEl === null || listEl === void 0 ? void 0 : listEl.appendChild(listItem);
+        }
     }
     renderContent() {
         const listId = `${this.type}-projects-list`;
@@ -132,6 +191,6 @@ class ProjectList {
         this.hostElement.insertAdjacentElement("afterbegin", this.element);
     }
 }
-const projectInput = new ProjectInput();
-const projectListActive = new ProjectList("active");
 const projectListFinished = new ProjectList("finished");
+const projectListActive = new ProjectList("active");
+const projectInput = new ProjectInput();
